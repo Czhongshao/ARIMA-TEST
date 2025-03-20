@@ -308,7 +308,7 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
     print("\n-----------------对比图像绘制完成-----------------\n")
 
 # 绘制原始数据与未来预测数据图像
-def plot_future_predictions(df_total, history, model_fit, need_to_predicted, years_to_predicted):
+def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_predicted):
     """
     绘制未来预测数据图像。
     
@@ -364,7 +364,11 @@ print('保留后数据预览：\n', df_total.head(), end='\n--------------------
 
 ## 划分训练和测试集
 X = df_total.values
-size = int(len(X) * 0.60)
+if need_to_predicted != "进出口总额（亿元人民币）":
+    trans = 0.7 # 根据数据特征划分
+else:
+    trans = 0.6
+size = int(len(X) * trans)
 train, test = X[0:size], X[size:len(X)]
 test_time = df_total.index[size:len(X)] # 测试集时间索引
 # 输出划分后的训练集和测试集
@@ -379,16 +383,14 @@ history = [x for x in train]
 plots_lineAndboxplot(df_total, titles="原始")
 
 ## SARIMA 参数
-best_order, best_seasonal_order, best_aic, best_bic = find_best_sarima_params(train) # 调用一次函数即可
+# best_order, best_seasonal_order, best_aic, best_bic = find_best_sarima_params(train) # 调用一次函数即可
 """
-进出口总额（亿元人民币）:
-最佳ARIMA参数: (1, 0, 0)
-最佳SARIMA参数: (2, 0, 1, 12)
-AIC: 10.0, BIC: 21.84723926233511
-当前最佳 SARIMA 参数：order=(1, 0, 0), seasonal_order=(2, 0, 1, 12)
+# (1, 0, 0) (2, 0, 1, 12) 总额
+# (2, 0, 1) (2, 0, 1, 12) 进口
+# (0, 0, 1) (1, 0, 0, 12) 出口
 """
-# best_order = (1, 0, 0)
-# best_seasonal_order = (2, 0, 1, 12)
+best_order, best_seasonal_order = (1, 0, 0), (2, 0, 1, 12)
+
 
 ## SARIMA 拟合
 predictions, mse, rmse, mae, mape, models = fit_and_evaluate_sarima(test_time, test, 
@@ -406,7 +408,7 @@ ADFs(d, D, df_total)
 plot_original_vs_predicted(df_total, test, predictions, need_to_predicted)
 
 # 调用函数绘制未来预测数据图像
-plot_future_predictions(df_total, history, models, need_to_predicted, years_to_predicted)
+plot_future_predictions(df_total, models, need_to_predicted, years_to_predicted)
 
 
 # 获取未来预测的时间点和预测值
