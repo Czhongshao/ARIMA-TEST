@@ -1,5 +1,5 @@
 """
-# 深圳进出口量预测SARIMA模型
+# 深圳外贸货物吞吐量预测SARIMA模型
 
 ## 使用到的模块及其安装
  - Python version: 3.11.0
@@ -92,11 +92,11 @@ def ADFs(d, D, df_total):
     print("\n----------------正在绘制季节性差分图----------------\n")
     plt.figure(figsize=(10, 6))  # 设置图形大小
     df_total['季节性差分'].plot(kind='line', marker='o', color='blue', linestyle='-')  # 绘制折线图，添加颜色和线型
-    plt.title(f"{need_to_predicted} - 季节性差分", fontsize=14, fontweight='bold')  # 设置标题，增加字体大小和加粗
+    plt.title(f"深圳货物吞吐量 - 季节性差分", fontsize=14, fontweight='bold')  # 设置标题，增加字体大小和加粗
     plt.xlabel('时间', fontsize=12)  # 添加X轴标签
-    plt.ylabel('数值（亿元人民币）', fontsize=12)  # 添加Y轴标签
+    plt.ylabel('数值（万吨）', fontsize=12)  # 添加Y轴标签
     plt.grid(True, linestyle='--', alpha=0.7)  # 添加网格线，设置样式和透明度
-    fig_path = os.path.join(figs_folder, f"深圳海关{need_to_predicted}_seasonal_diff.png")
+    fig_path = os.path.join(figs_folder, f"深圳外贸货物吞吐量_seasonal_diff.png")
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
     plt.show()  # 显示图形
@@ -117,7 +117,7 @@ def ADFs(d, D, df_total):
     ax2.set_xlabel('滞后阶数', fontsize=10)  # 设置X轴标签
     ax2.set_ylabel('偏自相关系数', fontsize=10)  # 设置Y轴标签
     plt.tight_layout()  # 自动调整子图布局
-    fig_path = os.path.join(figs_folder, f"深圳海关{need_to_predicted}_ACFandPACF.png")
+    fig_path = os.path.join(figs_folder, f"深圳外贸货物吞吐量_ACFandPACF.png")
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
     plt.show()  # 显示图形
@@ -178,7 +178,7 @@ def find_best_sarima_params(train_data, max_p=5, max_d=2, max_q=5, max_P=2, max_
     # 将结果列表转换为DataFrame
     results_df = pd.DataFrame(results)
     # 保存文件内容
-    excel_path = os.path.join(excels_folder, f"{need_to_predicted}_sarima_results.xlsx")
+    excel_path = os.path.join(excels_folder, f"深圳外贸货物吞吐量_sarima_results.xlsx")
     results_df.to_excel(excel_path, index=True)
     print(f"参数组合及其AIC和BIC值已保存到文件：{excel_path}")
 
@@ -233,7 +233,7 @@ def fit_and_evaluate_sarima(test_time, test_data, history, order, seasonal_order
     })
 
     # 保存文件内容
-    excel_path = os.path.join(excels_folder, f"深圳海关{need_to_predicted}_test_predictions.xlsx")
+    excel_path = os.path.join(excels_folder, f"深圳外贸货物吞吐量_test_predictions.xlsx")
     results_df.to_excel(excel_path, index=False)
     print(f"测试预测值和实际值已保存到文件：{excel_path}")
 
@@ -262,17 +262,17 @@ def plots_lineAndboxplot(df_total, titles):
     # 绘制当前数据连线图
     plt.subplot(1, 2, 1)  # 1行2列的第1个位置
     plt.plot(df_total.index, df_total[need_to_predicted], marker='o', color='blue', alpha=0.7)
-    plt.title(f"{need_to_predicted} - {titles}数据连线图", fontsize=12)
+    plt.title(f" - {titles}数据连线图", fontsize=12)
     plt.xlabel('时间', fontsize=12)  # 假设 x 轴是日期
-    plt.ylabel('数值（亿元人民币）', fontsize=10)
+    plt.ylabel('数值（万吨）', fontsize=10)
     # 绘制当前数据箱线图
     plt.subplot(1, 2, 2)  # 1行2列的第2个位置
     sns.boxplot(data=df_total[[need_to_predicted]], palette='viridis')
-    plt.title(f"{need_to_predicted} - {titles}数据箱线图", fontsize=12)
-    plt.ylabel("数值（亿元人民币）", fontsize=10)
+    plt.title(f" - {titles}数据箱线图", fontsize=12)
+    plt.ylabel("数值（万吨）", fontsize=10)
     plt.tight_layout()
     # 保存图像
-    fig_path = os.path.join(figs_folder, f"深圳海关{need_to_predicted}_{titles}_lineAndboxplot.png")
+    fig_path = os.path.join(figs_folder, f"深圳外贸货物吞吐量_{titles}_lineAndboxplot.png")
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
     plt.show()
@@ -293,15 +293,15 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
     # 添加图例
     plt.legend(loc="best", fontsize=10)
     # 添加标题和轴标签
-    plt.title(f"{need_to_predicted} - 原始数据与测试预测数据对比", fontsize=14, fontweight="bold")
+    plt.title(f"深圳货物吞吐量 - 原始数据与测试预测数据对比", fontsize=14, fontweight="bold")
     plt.xlabel("时间", fontsize=12)
-    plt.ylabel("数值（亿元人民币）", fontsize=12)
+    plt.ylabel("数值（万吨）", fontsize=12)
     # 添加网格线
     plt.grid(True, linestyle="--", alpha=0.7)
     # 显示图像
     plt.tight_layout()
     # 保存图像
-    fig_path = os.path.join(figs_folder, f"深圳海关{need_to_predicted}_original_vs_predicted.png")
+    fig_path = os.path.join(figs_folder, f"深圳货物吞吐量_original_vs_predicted.png")
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
     plt.show()
@@ -314,7 +314,6 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
     
     参数:
     - df_total: 包含时间序列数据的 DataFrame
-    - history: 历史数据列表
     - model_fit: 已拟合的 SARIMA 模型
     - need_to_predicted: 需要预测的列名
     - years_to_predicted: 需要预测的未来年数
@@ -337,15 +336,15 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
     # 添加图例
     plt.legend(loc="best", fontsize=10)
     # 添加标题和轴标签
-    plt.title(f"{need_to_predicted} - 原始数据与未来预测数据对比", fontsize=14, fontweight="bold")
+    plt.title(f"深圳货物吞吐量 - 原始数据与未来预测数据对比", fontsize=14, fontweight="bold")
     plt.xlabel("时间", fontsize=12)
-    plt.ylabel("数值（亿元人民币）", fontsize=12)
+    plt.ylabel("数值（万吨）", fontsize=12)
     # 添加网格线
     plt.grid(True, linestyle="--", alpha=0.7)
     # 显示图像
     plt.tight_layout()
     # 保存图像
-    fig_path = os.path.join(figs_folder, f"深圳海关{need_to_predicted}_future{years_to_predicted}years_predictions.png")
+    fig_path = os.path.join(figs_folder, f"深圳货物吞吐量_future{years_to_predicted}years_predictions.png")
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
     plt.show()
@@ -353,9 +352,8 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
 
 
 # 读取数据
-df=pd.read_excel('深圳海关进出口数据2014~2024.xlsx')
-# 进出口总额（亿元人民币） | 进口（亿元人民币） | 出口（亿元人民币）
-need_to_predicted = str(input("请输入需要预测的内容[进出口总额（亿元人民币）|进口（亿元人民币）|出口（亿元人民币）]："))
+df=pd.read_excel('深圳外贸货物吞吐量.xlsx')
+need_to_predicted = "外贸货物吞吐量(万吨)"
 years_to_predicted = int(input("请输入需要预测未来多少年的内容："))
 df_total = df[['时间', need_to_predicted]].copy() # 保留单一列数据，用于预测。这里以进出口总额的预测为例。
 df_total.set_index('时间',inplace=True) # 设置时间索引
@@ -364,11 +362,7 @@ print('保留后数据预览：\n', df_total.head(), end='\n--------------------
 
 ## 划分训练和测试集
 X = df_total.values
-if need_to_predicted != "进出口总额（亿元人民币）":
-    trans = 0.7 # 根据数据特征划分
-else:
-    trans = 0.6
-size = int(len(X) * trans)
+size = int(len(X) * 0.75)
 train, test = X[0:size], X[size:len(X)]
 test_time = df_total.index[size:len(X)] # 测试集时间索引
 # 输出划分后的训练集和测试集
@@ -385,17 +379,10 @@ plots_lineAndboxplot(df_total, titles="原始")
 ## SARIMA 参数
 # best_order, best_seasonal_order, best_aic, best_bic = find_best_sarima_params(train) # 调用一次函数即可
 """
-# (1, 0, 0), (2, 0, 1, 12) 总额
-# (2, 0, 1), (2, 0, 1, 12) 进口
-# (0, 0, 1), (1, 0, 0, 12) 出口
+最佳ARIMA参数: (0, 1, 1)
+最佳SARIMA参数: (1, 1, 2, 12)
 """
-# 进出口总额（亿元人民币）|进口（亿元人民币）|出口（亿元人民币）|
-if need_to_predicted == "进出口总额（亿元人民币）":
-    best_order, best_seasonal_order = (1, 0, 0), (2, 0, 1, 12)
-elif need_to_predicted == "进口（亿元人民币）":
-    best_order, best_seasonal_order = (2, 0, 1), (2, 0, 1, 12)
-elif need_to_predicted == "出口（亿元人民币）":
-    best_order, best_seasonal_order = (0, 0, 1), (1, 0, 0, 12)
+best_order, best_seasonal_order = (0, 1, 1), (1, 1, 2, 12)
 
 
 ## SARIMA 拟合
@@ -427,6 +414,6 @@ future_df = pd.DataFrame(future_predictions, index=future_dates, columns=[need_t
 df_total_with_predictions = pd.concat([df_total, future_df])
 
 # 保存预测结果文件
-excel_path = os.path.join(excels_folder, f"深圳海关{need_to_predicted}_{years_to_predicted}years_predicted_data.xlsx")
+excel_path = os.path.join(excels_folder, f"深圳货物吞吐量_{years_to_predicted}years_predicted_data.xlsx")
 df_total_with_predictions.to_excel(excel_path, index=True)
 print(f"数据已保存到文件：{excel_path}")
