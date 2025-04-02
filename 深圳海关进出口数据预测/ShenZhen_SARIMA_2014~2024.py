@@ -3,14 +3,21 @@
 
 ## 使用到的模块及其安装
  - Python version: 3.11.0
+
  - Pandas version: 2.2.3
     - pip install pandas==2.2.3
+
  - Matplotlib version: 3.10.1
     - pip install matplotlib==3.10.1
+
  - Seaborn version: 0.13.2
     - pip install seaborn==0.13.2
+
  - Statsmodels version:
     - pip install statsmodels==0.14.4
+    
+ - SciKit-Learn version: 1.6.1
+    - pip install scikit-learn==1.6.1
 """
 
 import os
@@ -18,7 +25,6 @@ import pandas as pd
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-import statsmodels.api as sm
 import seaborn as sns
 import matplotlib as mpl
 mpl.rcParams['font.family'] = 'SimHei'
@@ -50,9 +56,9 @@ def adfuller_test(series, title=""):
     功能: 检验时间序列的平稳性，判断是否存在单位根
 
     参数:
-        series : pd.Series/array-like
+        series: pd.Series/array-like
             待检验的时间序列数据
-        title : str, optional
+        title: str, optional
             检验标题(用于结果标识)
 
     输出:
@@ -94,11 +100,11 @@ def ADFs(d, D, df_total):
     3. 绘制ACF/PACF自相关图
 
     参数:
-    d : int
+    d: int
         非季节性差分阶数
-    D : int
+    D: int
         季节性差分阶数
-    df_total : DataFrame
+    df_total: DataFrame
         包含待分析时间序列的数据框
     """
 
@@ -106,20 +112,20 @@ def ADFs(d, D, df_total):
     print("\n" + "=" * 50)
     print("开始ADF平稳性检验...")
 
-    # -- 1.1 原始数据检验 --
+    # -- 原始数据检验 --
     adfuller_test(df_total[need_to_predicted], title="原始数据")
 
-    # -- 1.2 非季节差分检验 --
+    # -- 非季节差分检验 --
     if d != 0:
         df_total[f'{d}阶差分'] = df_total[need_to_predicted].diff(d)  # d阶差分
         adfuller_test(df_total[f'{d}阶差分'].dropna(), title=f'{d}阶差分')
 
-    # -- 1.3 季节差分检验 --
+    # -- 季节差分检验 --
     if D != 0:
         df_total[f'{D}阶季节差分'] = df_total[need_to_predicted].diff(D)
         adfuller_test(df_total[f'{D}阶季节差分'].dropna(), title=f'{D}阶季节差分')
 
-    # 固定12期季节差分(用于后续分析)
+    # -- 季节性差分检验 --
     df_total['季节性差分'] = df_total[need_to_predicted].diff(12)
     adfuller_test(df_total['季节性差分'].dropna(), title='12期季节差分')
 
@@ -127,7 +133,7 @@ def ADFs(d, D, df_total):
     print("\n" + "=" * 50)
     print("开始数据可视化...")
 
-    # -- 2.1 季节差分时序图 --
+    # -- 季节差分时序图 --
     plt.figure(figsize=(10, 6))
     df_total['季节性差分'].plot(
         kind='line',
@@ -145,7 +151,7 @@ def ADFs(d, D, df_total):
     plt.show()
     print(f"-> 季节差分图已保存: {fig_path}")
 
-    # -- 2.2 ACF/PACF图 --
+    # -- ACF/PACF图 --
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
 
     # ACF图
@@ -211,11 +217,11 @@ def find_best_sarima_params(train_data, max_p=5, max_d=2, max_q=5, max_P=2, max_
                                     # 模型拟合
                                     model_fit = model.fit(disp=False)
 
-                                    # -- 2.2 指标计算 --
+                                    # -- 指标计算 --
                                     current_aic = model_fit.aic
                                     current_bic = model_fit.bic
 
-                                    # -- 2.3 更新最优值 --
+                                    # -- 更新最优值 --
                                     if current_aic < best_aic:
                                         best_aic = current_aic
                                         best_order = (p, d, q)
@@ -225,7 +231,7 @@ def find_best_sarima_params(train_data, max_p=5, max_d=2, max_q=5, max_P=2, max_
                                         best_order = (p, d, q)
                                         best_seasonal_order = (P, D, Q, s)
 
-                                    # -- 2.4 记录结果 --
+                                    # -- 记录结果 --
                                     print(f"order = ({p, d, q}), seasonal_order = ({P, D, Q, s})", end="\t")
                                     print(f'AIC: {current_aic}\tBIC: {current_bic}')
                                     results.append({
@@ -241,13 +247,13 @@ def find_best_sarima_params(train_data, max_p=5, max_d=2, max_q=5, max_P=2, max_
                                     continue
 
     # ==== 3. 结果输出 ====
-    # 3.1 保存结果到Excel
+    # 保存结果到Excel
     results_df = pd.DataFrame(results)
     excel_path = os.path.join(excels_folder, f"{need_to_predicted}_sarima_results.xlsx")
     results_df.to_excel(excel_path, index=True)
     print(f"参数组合及其AIC和BIC值已保存到文件：{excel_path}")
 
-    # 3.2 打印最优参数
+    # 打印最优参数
     print(f'最佳ARIMA参数: {best_order}')
     print(f'最佳SARIMA参数: {best_seasonal_order}')
     print(f'AIC: {best_aic}, BIC: {best_bic}')
@@ -264,15 +270,15 @@ def fit_and_evaluate_sarima(test_time, test_data, history, order, seasonal_order
     3. 计算并返回预测评估指标
 
     参数:
-    test_time : array-like
+    test_time: array-like
         测试集时间索引
-    test_data : array-like
+    test_data: array-like
         测试集实际值(形状需与history一致)
-    history : list
+    history: list
         历史训练数据(动态扩展)
-    order : tuple
+    order: tuple
         (p,d,q)非季节参数
-    seasonal_order : tuple
+    seasonal_order: tuple
         (P,D,Q,s)季节参数
 
     返回:
@@ -294,12 +300,12 @@ def fit_and_evaluate_sarima(test_time, test_data, history, order, seasonal_order
                         enforce_invertibility=False)  # 不强制可逆
         model_fit = model.fit(disp=False)  # 不显示优化过程
 
-        # -- 2.2 单步预测 --
+        # -- 单步预测 --
         forecast = model_fit.get_forecast(steps=1)
         yhat = forecast.predicted_mean[0]  # 提取预测值
         predictions.append(yhat)
 
-        # -- 2.3 更新历史 --
+        # -- 更新历史 --
         history.append(test_data[t])  # 将真实值加入历史
         print(f"[step {t + 1}] 预测: {yhat:.1f} | 实际: {test_data[t][0]:.1f}")
 
@@ -338,21 +344,21 @@ def plots_lineAndboxplot(df_total, titles):
     # ==== 1. 初始化设置 ====
     print("\n-----------------绘制图像内容-----------------\n")
 
-    # -- 1.1 创建画布 --
+    # -- 创建画布 --
     plt.figure(figsize=(10, 4))
     plt.subplots_adjust(wspace=0.3)
 
     # ==== 2. 折线图绘制 ====
     plt.subplot(1, 2, 1)
 
-    # -- 2.1 绘制折线 --
+    # -- 绘制折线 --
     plt.plot(df_total.index,
              df_total[need_to_predicted],
              marker='o',
              color='blue',
              alpha=0.7)
 
-    # -- 2.2 图表装饰 --
+    # -- 图表装饰 --
     plt.title(f"{need_to_predicted} - {titles}数据连线图", fontsize=12)
     plt.xlabel('时间', fontsize=12)
     plt.ylabel('数值（亿元人民币）', fontsize=10)
@@ -360,23 +366,23 @@ def plots_lineAndboxplot(df_total, titles):
     # ==== 3. 箱线图绘制 ====
     plt.subplot(1, 2, 2)
 
-    # -- 3.1 绘制箱线 --
+    # -- 绘制箱线 --
     sns.boxplot(data=df_total[[need_to_predicted]],
                 palette='viridis')
 
-    # -- 3.2 图表装饰 --
+    # -- 图表装饰 --
     plt.title(f"{need_to_predicted} - {titles}数据箱线图", fontsize=12)
     plt.ylabel("数值（亿元人民币）", fontsize=10)
 
     # ==== 4. 输出保存 ====
     plt.tight_layout()
 
-    # -- 4.1 保存图片 --
+    # -- 保存图片 --
     fig_path = os.path.join(figs_folder, f"深圳海关{need_to_predicted}_{titles}_lineAndboxplot.png")
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
 
-    # -- 4.2 显示图片 --
+    # -- 显示图片 --
     plt.show()
     print(f"\n-----------------{titles}图像绘制结束-----------------\n")
 
@@ -394,7 +400,7 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
     # ==== 1. 初始化设置 ====
     print("\n-----------------绘制原始数据与预测数据对比图像-----------------\n")
 
-    # -- 1.1 准备数据 --
+    # -- 准备数据 --
     original_index = df_total.index
     original_values = df_total[need_to_predicted]
     test_index = original_index[-len(test):]
@@ -402,7 +408,7 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
     # ==== 2. 绘图设置 ====
     plt.figure(figsize=(12, 6))
 
-    # -- 2.1 绘制原始数据 --
+    # -- 绘制原始数据 --
     plt.plot(original_index, original_values,
              label="原始数据",
              color="blue",
@@ -411,7 +417,7 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
              linewidth=1.5,
              markersize=4)
 
-    # -- 2.2 绘制预测数据 --
+    # -- 绘制预测数据 --
     plt.plot(test_index, predictions,
              label="预测数据",
              color="red",
@@ -421,29 +427,28 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
              markersize=4)
 
     # ==== 3. 图表装饰 ====
-    # -- 3.1 图例设置 --
+    # -- 图例设置 --
     plt.legend(loc="best", fontsize=10)
 
-    # -- 3.2 标题和坐标轴 --
+    # -- 标题和坐标轴 --
     plt.title(f"{need_to_predicted} - 原始数据与测试预测数据对比",
               fontsize=14,
               fontweight="bold")
     plt.xlabel("时间", fontsize=12)
     plt.ylabel("数值（亿元人民币）", fontsize=12)
 
-    # -- 3.3 网格线设置 --
+    # -- 网格线设置 --
     plt.grid(True, linestyle="--", alpha=0.7)
 
     # ==== 4. 输出保存 ====
     plt.tight_layout()
 
-    # -- 4.1 保存图像 --
-    fig_path = os.path.join(figs_folder,
-                            f"深圳海关{need_to_predicted}_original_vs_predicted.png")
+    # -- 保存图像 --
+    fig_path = os.path.join(figs_folder, f"深圳海关{need_to_predicted}_original_vs_predicted.png")
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
 
-    # -- 4.2 显示图像 --
+    # -- 显示图像 --
     plt.show()
     print("\n-----------------对比图像绘制完成-----------------\n")
 
@@ -465,22 +470,22 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
     # ==== 1. 初始化设置 ====
     print("\n-----------------绘制未来预测数据图像-----------------\n")
 
-    # -- 1.1 准备历史数据 --
+    # -- 准备历史数据 --
     original_index = df_total.index
     original_values = df_total[need_to_predicted]
 
     # ==== 2. 生成预测 ====
-    # -- 2.1 计算预测期数 --
+    # -- 计算预测期数 --
     future_steps = years_to_predicted * 12
 
-    # -- 2.2 生成未来日期 --
+    # -- 生成未来日期 --
     future_dates = pd.date_range(
         start=original_index[-1],
         periods=future_steps + 1,
         freq='MS'
     )[1:]
 
-    # -- 2.3 执行预测 --
+    # -- 执行预测 --
     future_predictions = model_fit.get_forecast(
         steps=future_steps
     ).predicted_mean
@@ -488,7 +493,7 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
     # ==== 3. 绘图展示 ====
     plt.figure(figsize=(12, 6))
 
-    # -- 3.1 绘制历史数据 --
+    # -- 绘制历史数据 --
     plt.plot(
         original_index,
         original_values,
@@ -500,7 +505,7 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
         markersize=4
     )
 
-    # -- 3.2 绘制预测数据 --
+    # -- 绘制预测数据 --
     plt.plot(
         future_dates,
         future_predictions,
@@ -513,27 +518,27 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
     )
 
     # ==== 4. 图表装饰 ====
-    # -- 4.1 添加图例 --
+    # -- 添加图例 --
     plt.legend(loc="best", fontsize=10)
 
-    # -- 4.2 设置标题 --
+    # -- 设置标题 --
     plt.title(
         f"{need_to_predicted} - 原始数据与未来预测数据对比",
         fontsize=14,
         fontweight="bold"
     )
 
-    # -- 4.3 坐标轴设置 --
+    # -- 坐标轴设置 --
     plt.xlabel("时间", fontsize=12)
     plt.ylabel("数值（亿元人民币）", fontsize=12)
 
-    # -- 4.4 网格线设置 --
+    # -- 网格线设置 --
     plt.grid(True, linestyle="--", alpha=0.7)
 
     # ==== 5. 输出保存 ====
     plt.tight_layout()
 
-    # -- 5.1 保存图像 --
+    # -- 保存图像 --
     fig_path = os.path.join(
         figs_folder,
         f"深圳海关{need_to_predicted}_future{years_to_predicted}years_predictions.png"
@@ -541,7 +546,7 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
     plt.savefig(fig_path)
     print(f"图像已保存到文件：{fig_path}")
 
-    # -- 5.2 显示图像 --
+    # -- 显示图像 --
     plt.show()
     print("\n-----------------未来预测数据图像绘制完成-----------------\n")
 
@@ -576,12 +581,6 @@ history = [x for x in train]
 plots_lineAndboxplot(df_total, titles="原始")
 
 ## SARIMA 参数
-# best_order, best_seasonal_order, best_aic, best_bic = find_best_sarima_params(train) # 调用一次函数即可
-"""
-# (1, 0, 0), (2, 0, 1, 12) 总额
-# (2, 0, 1), (2, 0, 1, 12) 进口
-# (0, 0, 1), (1, 0, 0, 12) 出口
-"""
 # 进出口总额（亿元人民币）|进口（亿元人民币）|出口（亿元人民币）|
 if need_to_predicted == "进出口总额（亿元人民币）":
     best_order, best_seasonal_order = (1, 0, 0), (2, 0, 1, 12)
@@ -589,6 +588,13 @@ elif need_to_predicted == "进口（亿元人民币）":
     best_order, best_seasonal_order = (2, 0, 1), (2, 0, 1, 12)
 elif need_to_predicted == "出口（亿元人民币）":
     best_order, best_seasonal_order = (0, 0, 1), (1, 0, 0, 12)
+
+# best_order, best_seasonal_order, best_aic, best_bic = find_best_sarima_params(train) # 调用一次函数即可
+"""
+# (1, 0, 0), (2, 0, 1, 12) 总额
+# (2, 0, 1), (2, 0, 1, 12) 进口
+# (0, 0, 1), (1, 0, 0, 12) 出口
+"""
 
 
 ## SARIMA 拟合

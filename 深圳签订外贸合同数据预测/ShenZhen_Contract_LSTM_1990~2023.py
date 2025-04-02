@@ -1,3 +1,31 @@
+"""
+# 深圳签订外贸合同量预测ARIMA模型
+
+## 使用到的模块及其安装
+
+ - Python version: 3.11.0
+
+ - Pandas version: 2.2.3
+    - pip install pandas==2.2.3
+
+ - NumPy version: 2.2.2
+    - pip install numpy==2.2.2
+
+ - Matplotlib version: 3.10.1
+    - pip install matplotlib==3.10.1
+
+ - Seaborn version: 0.13.2
+    - pip install seaborn==0.13.2
+    
+ - Statsmodels version:
+    - pip install statsmodels==0.14.4
+
+ - SciKit-Learn version: 1.6.1
+    - pip install scikit-learn==1.6.1
+
+ - TensorFlow version: 2.19.0
+    - pip install tensorflow==2.19.0
+"""
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -171,18 +199,18 @@ def plot_results(true, pred, future_pred, country):
     plt.show()
 
 
-def save_results_to_excel(country, future_predictions, future_steps, series):
+def save_results_to_excel(country, future_predictions, years_to_predicted, series):
     """保存预测结果到Excel文件（自动生成未来日期序列）
     Args:
         country: 国家名称（用于文件名）
         future_predictions: 未来预测值数组
-        future_steps: 预测步长（年数）
+        years_to_predicted: 预测步长（年数）
         series: 原始时间序列（用于获取最后日期）
     """
     # 生成未来日期序列（从原始数据最后日期开始）
     future_dates = pd.date_range(
         start=series.index[-1] + pd.DateOffset(years=1),  # 从最后日期+1年开始
-        periods=future_steps,
+        periods=years_to_predicted,
         freq='YS'  # 年初为日期节点
     )
 
@@ -205,9 +233,9 @@ def main():
 
     # 2. 差分阶数确定（特殊国家使用预设值）
     if country == "其他" or "美国":
-        d = 1  # 美国家庭数据经验值
+        d = 1
     elif country == "泰国":
-        d = 0  # 泰国数据通常不需要差分
+        d = 0
     else:
         d = find_optimal_diff(series)  # 自动寻找最优差分阶数
     diff_series = difference(series, d)  # 执行差分
@@ -227,7 +255,7 @@ def main():
     Y_train, Y_test = Y[:train_size], Y[train_size:]
 
     # 6. 模型构建与训练
-    model = build_lstm_model(look_back, neurons=200)  # 减少神经元数量防止过拟合
+    model = build_lstm_model(look_back, neurons=200)
     early_stop = EarlyStopping(monitor='val_loss', patience=200, restore_best_weights=True)
 
     model.fit(X_train, Y_train,
@@ -251,11 +279,11 @@ def main():
         history_values.append(pred)  # 模拟实时预测场景
 
     # 8. 未来预测（添加随机噪声增强鲁棒性）
-    future_steps = 20
+    years_to_predicted = 20 # 预测未来年数
     future_predictions = []
     current_batch = scaled_data[-look_back:].reshape(1, 1, look_back)  # 初始化预测批次
 
-    for _ in range(future_steps):
+    for _ in range(years_to_predicted):
         current_pred = model.predict(current_batch, verbose=0)[0]
         raw_pred = scaler.inverse_transform(current_pred.reshape(-1, 1))[0][0]  # 反归一化
         undiff_pred = inverse_difference(history_values, raw_pred, d)
@@ -275,7 +303,7 @@ def main():
 
     # 10. 结果可视化与保存
     plot_results(series.values, test_predict_undiff, future_predictions, country)
-    save_results_to_excel(country, future_predictions, future_steps, series)
+    save_results_to_excel(country, future_predictions, years_to_predicted, series)
 
 if __name__ == '__main__':
     main()

@@ -3,20 +3,27 @@
 
 ## 使用到的模块及其安装
  - Python version: 3.11.0
+
  - Pandas version: 2.2.3
     - pip install pandas==2.2.3
+
  - Matplotlib version: 3.10.1
     - pip install matplotlib==3.10.1
+
  - Seaborn version: 0.13.2
     - pip install seaborn==0.13.2
+
  - Statsmodels version:
     - pip install statsmodels==0.14.4
+    
+ - SciKit-Learn version: 1.6.1
+    - pip install scikit-learn==1.6.1
 """
 
 import os
 import pandas as pd
 from statsmodels.tsa.stattools import adfuller
-from statsmodels.graphics.tsaplots import plot_acf,plot_pacf
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 import seaborn as sns
 import matplotlib as mpl
@@ -115,10 +122,10 @@ def ADFs(d, D, df_total):
     # 固定12期季节性差分（货运量典型周期）
     df_total['季节性差分'] = df_total[need_to_predicted].diff(12)
 
-    # 2.1 季节性差分检验
+    # 季节性差分检验
     adfuller_test(df_total['季节性差分'].dropna(), title='12期季节性差分')
 
-    # 2.2 时序图可视化
+    # 时序图可视化
     print("\n" + "=" * 20 + " 季节性差分时序图 " + "=" * 20)
     plt.figure(figsize=(10, 6))
     df_total['季节性差分'].plot(
@@ -138,14 +145,14 @@ def ADFs(d, D, df_total):
     print("\n" + "=" * 20 + " ACF/PACF分析 " + "=" * 20)
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
 
-    # 3.1 ACF图（30阶滞后）
+    # ACF图（30阶滞后）
     plot_acf(df_total['季节性差分'].iloc[13:],
              lags=30,
              ax=ax1,
              color='blue',
              title="自相关函数(ACF)")
 
-    # 3.2 PACF图（20阶滞后）
+    # PACF图（20阶滞后）
     plot_pacf(df_total['季节性差分'].iloc[13:],
               lags=20,
               ax=ax2,
@@ -444,7 +451,7 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
     # === 2. 绘图设置 ===
     plt.figure(figsize=(12, 6))
 
-    # 2.1 绘制原始数据（蓝色实线+圆点标记）
+    # 绘制原始数据（蓝色实线+圆点标记）
     plt.plot(original_index, original_values,
              label="原始数据",
              color="blue",
@@ -454,7 +461,7 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
              markersize=4,
              alpha=0.8)
 
-    # 2.2 绘制预测数据（红色实线+X形标记）
+    # 绘制预测数据（红色实线+X形标记）
     plt.plot(test_index, predictions,
              label="预测数据",
              color="red",
@@ -470,13 +477,13 @@ def plot_original_vs_predicted(df_total, test, predictions, need_to_predicted):
     plt.xlabel("时间", fontsize=12, labelpad=10)
     plt.ylabel("吞吐量 (万吨)", fontsize=12, labelpad=10)
 
-    # 3.1 网格线设置
+    # 网格线设置
     plt.grid(True,
              linestyle="--",
              alpha=0.5,
              which='both')
 
-    # 3.2 突出显示预测区间
+    # 突出显示预测区间
     plt.axvspan(test_index[0], test_index[-1],
                 facecolor='yellow',
                 alpha=0.1)
@@ -542,7 +549,7 @@ def plot_future_predictions(df_total, model_fit, need_to_predicted, years_to_pre
     print("\n-----------------未来预测数据图像绘制完成-----------------\n")
 
 
-df=pd.read_excel('深圳外贸货物吞吐量.xlsx')
+df = pd.read_excel('深圳外贸货物吞吐量.xlsx')
 need_to_predicted = "外贸货物吞吐量(万吨)"
 years_to_predicted = int(input("请输入需要预测未来多少年的内容："))
 df_total = df[['时间', need_to_predicted]].copy() # 保留单一列数据，用于预测。这里以进出口总额的预测为例。
@@ -567,12 +574,12 @@ history = [x for x in train]
 plots_lineAndboxplot(df_total, titles="原始")
 
 ## SARIMA 参数
-# best_order, best_seasonal_order, best_aic, best_bic = find_best_sarima_params(train) # 调用一次函数即可
 """
 最佳ARIMA参数: (0, 1, 1)
 最佳SARIMA参数: (1, 1, 2, 12)
 """
 best_order, best_seasonal_order = (0, 1, 1), (1, 1, 2, 12)
+# best_order, best_seasonal_order, best_aic, best_bic = find_best_sarima_params(train) # 调用一次函数即可
 
 
 ## SARIMA 拟合
